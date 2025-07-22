@@ -38,6 +38,7 @@ import mime from 'mime-types';
 
 import { getProjects, getSessions, getSessionMessages, renameProject, deleteSession, deleteProject, addProjectManually, extractProjectDirectory, clearProjectDirectoryCache } from './projects.js';
 import { spawnGemini, abortGeminiSession } from './gemini-cli.js';
+import { spawnOllama, abortOllamaSession } from './ollama-cli.js';
 import sessionManager from './sessionManager.js';
 import gitRoutes from './routes/git.js';
 import authRoutes from './routes/auth.js';
@@ -472,9 +473,19 @@ function handleChatConnection(ws) {
         // console.log('📁 Project:', data.options?.projectPath || 'Unknown');
         // console.log('🔄 Session:', data.options?.sessionId ? 'Resume' : 'New');
         await spawnGemini(data.command, data.options, ws);
+      } else if (data.type === 'ollama-command') {
+        // console.log('💬 User message:', data.command || '[Continue/Resume]');
+        // console.log('📁 Project:', data.options?.projectPath || 'Unknown');
+        // console.log('🔄 Session:', data.options?.sessionId ? 'Resume' : 'New');
+        await spawnOllama(data.command, data.options, ws);
       } else if (data.type === 'abort-session') {
         // console.log('🛑 Abort session request:', data.sessionId);
-        const success = abortGeminiSession(data.sessionId);
+        let success = false;
+        if (data.sessionId.startsWith('gemini_')) {
+            success = abortGeminiSession(data.sessionId);
+        } else if (data.sessionId.startsWith('ollama_')) {
+            success = abortOllamaSession(data.sessionId);
+        }
         ws.send(JSON.stringify({
           type: 'session-aborted',
           sessionId: data.sessionId,

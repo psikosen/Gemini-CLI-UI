@@ -44,6 +44,8 @@ function ToolsSettings({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('tools');
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
   const [enableNotificationSound, setEnableNotificationSound] = useState(false);
+  const [useTools, setUseTools] = useState(false);
+  const [useMcp, setUseMcp] = useState(false);
 
   // Common tool patterns
   const commonTools = [
@@ -68,6 +70,14 @@ function ToolsSettings({ isOpen, onClose }) {
     { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Fast and efficient latest model (Recommended)' },
     { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', description: 'Most advanced model (Note: May have quota limits)' }
   ];
+
+  const ollamaModels = [
+    { value: 'llama2', label: 'Llama 2', description: 'Opensource Llama 2 model' },
+    { value: 'codellama', label: 'Code Llama', description: 'Code Llama model' },
+    { value: 'mistral', label: 'Mistral', description: 'Mistral model' },
+  ];
+
+  const allModels = [...availableModels, ...ollamaModels];
 
   // MCP API functions
   const fetchMcpServers = async () => {
@@ -298,12 +308,16 @@ function ToolsSettings({ isOpen, onClose }) {
         setProjectSortOrder(settings.projectSortOrder || 'name');
         setSelectedModel(settings.selectedModel || 'gemini-2.5-flash');
         setEnableNotificationSound(settings.enableNotificationSound || false);
+        setUseTools(settings.useTools || false);
+        setUseMcp(settings.useMcp || false);
       } else {
         // Set defaults
         setAllowedTools([]);
         setDisallowedTools([]);
         setSkipPermissions(false);
         setProjectSortOrder('name');
+        setUseTools(false);
+        setUseMcp(false);
       }
 
       // Load MCP servers from API
@@ -330,6 +344,8 @@ function ToolsSettings({ isOpen, onClose }) {
         projectSortOrder,
         selectedModel,
         enableNotificationSound,
+        useTools,
+        useMcp,
         lastUpdated: new Date().toISOString()
       };
       
@@ -654,7 +670,7 @@ function ToolsSettings({ isOpen, onClose }) {
               <div className="flex items-center gap-3">
                 <Zap className="w-5 h-5 text-cyan-500" />
                 <h3 className="text-lg font-medium text-foreground">
-                  Gemini Model
+                  AI Model
                 </h3>
               </div>
               <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-4">
@@ -667,15 +683,60 @@ function ToolsSettings({ isOpen, onClose }) {
                     onChange={(e) => setSelectedModel(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
                   >
-                    {availableModels.map(model => (
-                      <option key={model.value} value={model.value}>
-                        {model.label}
-                      </option>
-                    ))}
+                    <optgroup label="Gemini">
+                      {availableModels.map(model => (
+                        <option key={model.value} value={model.value}>
+                          {model.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Ollama">
+                      {ollamaModels.map(model => (
+                        <option key={model.value} value={model.value}>
+                          {model.label}
+                        </option>
+                      ))}
+                    </optgroup>
                   </select>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {availableModels.find(m => m.value === selectedModel)?.description}
+                    {allModels.find(m => m.value === selectedModel)?.description}
                   </div>
+                  {selectedModel && !selectedModel.startsWith('gemini') && (
+                    <div className="space-y-2 pt-4">
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={useTools}
+                          onChange={(e) => setUseTools(e.target.checked)}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <div>
+                          <div className="font-medium text-foreground">
+                            Enable Tool Use
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Allow the model to use tools (if supported)
+                          </div>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={useMcp}
+                          onChange={(e) => setUseMcp(e.target.checked)}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <div>
+                          <div className="font-medium text-foreground">
+                            Enable MCP
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Enable Multi-agent Communication Protocol (if supported)
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

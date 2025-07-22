@@ -2039,9 +2039,11 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
 
     const toolsSettings = getToolsSettings();
 
+    const commandType = toolsSettings.selectedModel.startsWith('gemini') ? 'gemini-command' : 'ollama-command';
+
     // Send command to Gemini CLI via WebSocket with images
     sendMessage({
-      type: 'gemini-command',
+      type: commandType,
       command: input,
       options: {
         projectPath: selectedProject.path,
